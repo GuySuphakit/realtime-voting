@@ -3,10 +3,6 @@ from pyspark.sql.functions import from_json, col
 from pyspark.sql.functions import sum as _sum
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType
 
-# import pyspark
-#
-# print(pyspark.__version__) # to check the version of pyspark
-
 if __name__ == "__main__":
     # Initialize SparkSession
     spark = (SparkSession.builder
@@ -15,7 +11,7 @@ if __name__ == "__main__":
              .config("spark.jars.packages",
                      "org.apache.spark:spark-sql-kafka-0-10_2.13:3.5.0")  # Spark-Kafka integration
              .config("spark.jars",
-                     "/Users/airscholar/Dev/Projects/Python/Voting/postgresql-42.7.1.jar")  # PostgreSQL driver
+                     "postgresql-42.7.1.jar")  # PostgreSQL driver
              .config("spark.sql.adaptive.enabled", "false")  # Disable adaptive query execution
              .getOrCreate())
 
@@ -76,7 +72,7 @@ if __name__ == "__main__":
         .format("kafka") \
         .option("kafka.bootstrap.servers", "localhost:9092") \
         .option("topic", "aggregated_votes_per_candidate") \
-        .option("checkpointLocation", "/Users/airscholar/Dev/Projects/Python/Voting/checkpoints/checkpoint1") \
+        .option("checkpointLocation", "checkpoints/checkpoint1") \
         .outputMode("update") \
         .start()
 
@@ -85,7 +81,7 @@ if __name__ == "__main__":
         .format("kafka") \
         .option("kafka.bootstrap.servers", "localhost:9092") \
         .option("topic", "aggregated_turnout_by_location") \
-        .option("checkpointLocation", "/Users/airscholar/Dev/Projects/Python/Voting/checkpoints/checkpoint2") \
+        .option("checkpointLocation", "checkpoints/checkpoint2") \
         .outputMode("update") \
         .start()
 
@@ -97,6 +93,7 @@ if __name__ == "__main__":
     # ])
     #
     # voter_schema = StructType([
+        
     # ])
 
     # read candidate data from postgres

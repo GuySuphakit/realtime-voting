@@ -81,7 +81,7 @@ if __name__ == "__main__":
                 vote = voter | chosen_candidate | {
                     "voting_time": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
                     "vote": 1
-                }
+                } 
 
                 try:
                     print("User {} is voting for candidate: {}".format(vote['voter_id'], vote['candidate_id']))
