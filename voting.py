@@ -101,7 +101,7 @@ if __name__ == "__main__":
                     producer.poll(0)
                 except Exception as e:
                     print("Error: {}".format(e))
-                    # conn.rollback()
+                    conn.rollback()
                     continue
             time.sleep(0.2)
     except KafkaException as e:

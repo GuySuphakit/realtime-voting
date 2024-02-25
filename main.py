@@ -117,7 +117,6 @@ def insert_voters(conn, cur, voter):
                 )
     conn.commit()
     
-    
 def delivery_report(err, msg):
     if err is not None:
         print(f'Message delivery failed: {err}')
@@ -129,7 +128,7 @@ if __name__ == "__main__":
     conn = psycopg2.connect("host=localhost dbname=voting user=postgres password=postgres")
     cur = conn.cursor()
 
-    producer = SerializingProducer({'bootstrap.servers': 'localhost:9092', })
+    producer = SerializingProducer({'bootstrap.servers': 'localhost:9092',})
     create_tables(conn, cur)
 
     # get candidates from db
@@ -151,7 +150,7 @@ if __name__ == "__main__":
                 candidate['campaign_platform'], candidate['photo_url']))
             conn.commit()
 
-    for i in range(1000):
+    for i in range(20):
         voter_data = generate_voter_data()
         insert_voters(conn, cur, voter_data)
 

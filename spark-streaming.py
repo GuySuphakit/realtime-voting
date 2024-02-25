@@ -9,9 +9,9 @@ if __name__ == "__main__":
              .appName("ElectionAnalysis")
              .master("local[*]")  # Use local Spark execution with all available cores
              .config("spark.jars.packages",
-                     "org.apache.spark:spark-sql-kafka-0-10_2.13:3.5.0")  # Spark-Kafka integration
+                     "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0")  # Spark-Kafka integration
              .config("spark.jars",
-                     "postgresql-42.7.1.jar")  # PostgreSQL driver
+                     "/Users/ssuphapinyo/Code/realtime-voting/postgresql-42.7.2.jar")  # PostgreSQL driver
              .config("spark.sql.adaptive.enabled", "false")  # Disable adaptive query execution
              .getOrCreate())
 
