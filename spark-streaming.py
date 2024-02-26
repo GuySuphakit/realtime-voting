@@ -56,13 +56,13 @@ if __name__ == "__main__":
         .select(from_json(col("value"), vote_schema).alias("data")) \
         .select("data.*")
         
-    votes_df.printSchema()
-    query = votes_df \
-            .writeStream \
-            .outputMode("append") \
-            .format("console") \
-            .start()
-    query.awaitTermination()
+    # votes_df.printSchema()
+    # query = votes_df \
+    #         .writeStream \
+    #         .outputMode("append") \
+    #         .format("console") \
+    #         .start()
+    # query.awaitTermination()
 
     # Data preprocessing: type casting and watermarking
     votes_df = votes_df.withColumn("voting_time", col("voting_time").cast(TimestampType())) \
