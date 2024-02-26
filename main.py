@@ -105,18 +105,22 @@ def generate_candidate_data(candidate_number, total_parties):
 
 
 def insert_voters(conn, cur, voter):
-    cur.execute("""
-                        INSERT INTO voters (voter_id, voter_name, date_of_birth, gender, nationality, registration_number, address_street, address_city, address_state, address_country, address_postcode, email, phone_number, cell_number, picture, registered_age)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s,%s,%s)
-                        """,
-                (voter["voter_id"], voter['voter_name'], voter['date_of_birth'], voter['gender'],
-                 voter['nationality'], voter['registration_number'], voter['address']['street'],
-                 voter['address']['city'], voter['address']['state'], voter['address']['country'],
-                 voter['address']['postcode'], voter['email'], voter['phone_number'],
-                 voter['cell_number'], voter['picture'], voter['registered_age'])
-                )
-    conn.commit()
-    
+    try:
+        cur.execute("""
+                            INSERT INTO voters (voter_id, voter_name, date_of_birth, gender, nationality, registration_number, address_street, address_city, address_state, address_country, address_postcode, email, phone_number, cell_number, picture, registered_age)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s,%s,%s)
+                            """,
+                    (voter["voter_id"], voter['voter_name'], voter['date_of_birth'], voter['gender'],
+                    voter['nationality'], voter['registration_number'], voter['address']['street'],
+                    voter['address']['city'], voter['address']['state'], voter['address']['country'],
+                    voter['address']['postcode'], voter['email'], voter['phone_number'],
+                    voter['cell_number'], voter['picture'], voter['registered_age'])
+                    )
+        conn.commit()
+    except psycopg2.IntegrityError:
+        print(f"Voter {voter['voter_id']} already exists in the database")
+        conn.rollback()
+            
 def delivery_report(err, msg):
     if err is not None:
         print(f'Message delivery failed: {err}')
@@ -150,7 +154,7 @@ if __name__ == "__main__":
                 candidate['campaign_platform'], candidate['photo_url']))
             conn.commit()
 
-    for i in range(20):
+    for i in range(500):
         voter_data = generate_voter_data()
         insert_voters(conn, cur, voter_data)
 
