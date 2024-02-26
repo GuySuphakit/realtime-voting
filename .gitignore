@@ -3,3 +3,5 @@ checkpoints
 .idea
 .DS_Store
 __pycache__
+.vscode
+.defaultSettings.json
