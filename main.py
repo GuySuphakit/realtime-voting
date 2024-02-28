@@ -15,6 +15,9 @@ candidates_topic = 'candidates_topic'
 
 
 def create_tables(conn, cur):
+    """This function creates three tables in the PostgreSQL database if they do not already exist. 
+    - The tables are candidates, voters, and votes. Each table has a specific schema defined in the SQL commands. 
+    - The conn.commit() at the end ensures that these changes are saved to the database."""
     cur.execute("""
         CREATE TABLE IF NOT EXISTS candidates (
             candidate_id VARCHAR(255) PRIMARY KEY,
@@ -25,6 +28,7 @@ def create_tables(conn, cur):
             photo_url TEXT
         )
     """)
+    
     cur.execute("""
         CREATE TABLE IF NOT EXISTS voters (
             voter_id VARCHAR(255) PRIMARY KEY,
@@ -60,6 +64,7 @@ def create_tables(conn, cur):
 
 
 def generate_voter_data():
+    """This one generates data for a voter. It makes a GET request to the randomuser.me API and formats the response into a dictionary with keys like voter_id, voter_name, date_of_birth, etc."""
     response = requests.get(BASE_URL)
     if response.status_code == 200:
         user_data = response.json()['results'][0]
@@ -88,6 +93,7 @@ def generate_voter_data():
 
 
 def generate_candidate_data(candidate_number, total_parties):
+    """This function generates data for a candidate. It makes a GET request to the randomuser.me API and formats the response into a dictionary with keys like candidate_id, candidate_name, party_affiliation, etc. The party affiliation is chosen from a predefined list of parties, and the gender alternates based on the candidate number."""
     response = requests.get(BASE_URL + '&gender=' + ('female' if candidate_number % 2 == 1 else 'male'))
     if response.status_code == 200:
         user_data = response.json()['results'][0]
@@ -105,11 +111,15 @@ def generate_candidate_data(candidate_number, total_parties):
 
 
 def insert_voters(conn, cur, voter):
+    """This function inserts a voter into the voters table in the PostgreSQL database. It uses the psycopg2 library to execute an INSERT SQL command. If the voter already exists in the database, it catches the psycopg2.IntegrityError and prints a message. Otherwise, it commits the changes to the database. 
+    - The voter parameter is a dictionary that contains the voter's data. 
+    - The SQL command uses placeholders (%s) for the values, which are then provided as a tuple in the second argument to cur.execute(). 
+    - The conn.commit() at the end ensures that the changes are saved to the database.""" 
     try:
         cur.execute("""
-                            INSERT INTO voters (voter_id, voter_name, date_of_birth, gender, nationality, registration_number, address_street, address_city, address_state, address_country, address_postcode, email, phone_number, cell_number, picture, registered_age)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s,%s,%s)
-                            """,
+                    INSERT INTO voters (voter_id, voter_name, date_of_birth, gender, nationality, registration_number, address_street, address_city, address_state, address_country, address_postcode, email, phone_number, cell_number, picture, registered_age)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s,%s,%s)
+                    """,
                     (voter["voter_id"], voter['voter_name'], voter['date_of_birth'], voter['gender'],
                     voter['nationality'], voter['registration_number'], voter['address']['street'],
                     voter['address']['city'], voter['address']['state'], voter['address']['country'],
@@ -166,4 +176,4 @@ if __name__ == "__main__":
         )
 
         print(f'Produced voter {i}, data: {voter_data}')
-        producer.flush()
+        producer.flush() # flushes the producer to ensure all messages are delivered
