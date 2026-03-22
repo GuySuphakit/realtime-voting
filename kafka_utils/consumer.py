@@ -198,8 +198,8 @@ class KafkaConsumerWrapper:
 class StreamlitKafkaConsumer:
     """Kafka consumer optimized for Streamlit dashboards.
 
-    Uses kafka-python library for simpler polling semantics
-    suitable for dashboard updates.
+    Uses confluent_kafka (same library as the rest of the codebase) to poll
+    all available messages from a topic from the earliest offset.
     """
 
     def __init__(self, topic: str, config: Optional[Dict[str, Any]] = None):
@@ -209,36 +209,43 @@ class StreamlitKafkaConsumer:
             topic: Topic to consume from
             config: Optional config overrides
         """
-        import simplejson as json
-        from kafka import KafkaConsumer as KPKafkaConsumer
-
         consumer_config = {
-            "bootstrap_servers": settings.kafka.bootstrap_servers,
-            "auto_offset_reset": "earliest",
-            "value_deserializer": lambda x: json.loads(x.decode("utf-8")),
+            "bootstrap.servers": settings.kafka.bootstrap_servers,
+            "group.id": f"streamlit-{topic}",
+            "auto.offset.reset": "earliest",
+            "enable.auto.commit": False,
         }
 
         if config:
             consumer_config.update(config)
 
-        self._consumer = KPKafkaConsumer(topic, **consumer_config)
+        self._consumer = Consumer(consumer_config)
+        self._consumer.subscribe([topic])
         self._topic = topic
 
     def fetch_all(self, timeout_ms: int = 1000) -> List[Dict[str, Any]]:
-        """Fetch all available messages within timeout.
+        """Fetch all currently available messages within timeout.
+
+        Polls until no new messages arrive within the timeout window.
 
         Args:
-            timeout_ms: Polling timeout in milliseconds
+            timeout_ms: Per-poll timeout in milliseconds
 
         Returns:
-            List of deserialized messages
+            List of deserialized message values
         """
-        messages = self._consumer.poll(timeout_ms=timeout_ms)
+        timeout_s = timeout_ms / 1000
         data = []
 
-        for partition_messages in messages.values():
-            for msg in partition_messages:
-                data.append(msg.value)
+        while True:
+            msg = self._consumer.poll(timeout=timeout_s)
+            if msg is None:
+                break
+            if msg.error():
+                if msg.error().code() == KafkaError._PARTITION_EOF:
+                    break
+                raise ConsumerError(f"Consumer error: {msg.error()}", topic=self._topic)
+            data.append(deserialize_from_json(msg.value()))
 
         return data
 

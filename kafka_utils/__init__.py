@@ -32,7 +32,7 @@ from kafka_utils.exceptions import (
     ProducerError,
     SerializationError,
 )
-from kafka_utils.producer import KafkaProducerWrapper, get_producer
+from kafka_utils.producer import KafkaProducerWrapper
 from kafka_utils.serializers import (
     deserialize_from_json,
     json_deserializer,
@@ -43,7 +43,6 @@ from kafka_utils.serializers import (
 __all__ = [
     # Producer
     "KafkaProducerWrapper",
-    "get_producer",
     # Consumer
     "KafkaConsumerWrapper",
     "StreamlitKafkaConsumer",

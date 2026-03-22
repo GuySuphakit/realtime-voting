@@ -11,7 +11,7 @@ from ui.components.charts import plot_bar_chart, plot_donut_chart
 from ui.components.tables import paginate_table
 
 
-@st.cache_data
+@st.cache_data(ttl=30)
 def fetch_voting_stats() -> tuple[int, int]:
     """Return (voters_count, candidates_count) from the database."""
     return VoterRepository().count(), CandidateRepository().count()
@@ -35,6 +35,10 @@ def update_data() -> None:
 
     # --- Leading candidate ---
     results = fetch_kafka_data(settings.kafka.aggregated_votes_per_candidate_topic)
+    if results.empty:
+        st.info("No vote data available yet.")
+        return
+
     results = results.loc[results.groupby("candidate_id")["total_votes"].idxmax()]
     leading = results.loc[results["total_votes"].idxmax()]
 
@@ -42,7 +46,10 @@ def update_data() -> None:
     st.header("Leading Candidate")
     col1, col2 = st.columns(2)
     with col1:
-        st.image(leading["photo_url"], width=200)
+        try:
+            st.image(leading["photo_url"], width=200)
+        except Exception:
+            st.caption("Photo unavailable")
     with col2:
         st.header(leading["candidate_name"])
         st.subheader(leading["party_affiliation"])

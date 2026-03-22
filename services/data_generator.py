@@ -8,6 +8,7 @@ data generation is now separate from database and Kafka concerns.
 import logging
 
 import requests
+from requests.exceptions import RequestException
 
 from config import settings
 from models import Candidate, Voter
@@ -38,7 +39,10 @@ class DataGeneratorService:
         Raises:
             RuntimeError: If the API call fails
         """
-        response = requests.get(self._api_url)
+        try:
+            response = requests.get(self._api_url, timeout=10)
+        except RequestException as e:
+            raise RuntimeError(f"Failed to reach randomuser API: {e}") from e
         if response.status_code != 200:
             raise RuntimeError(f"Failed to fetch voter data: HTTP {response.status_code}")
 
@@ -79,7 +83,10 @@ class DataGeneratorService:
             RuntimeError: If the API call fails
         """
         gender = "female" if candidate_number % 2 == 1 else "male"
-        response = requests.get(f"{self._api_url}&gender={gender}")
+        try:
+            response = requests.get(f"{self._api_url}&gender={gender}", timeout=10)
+        except RequestException as e:
+            raise RuntimeError(f"Failed to reach randomuser API: {e}") from e
         if response.status_code != 200:
             raise RuntimeError(f"Failed to fetch candidate data: HTTP {response.status_code}")
 
