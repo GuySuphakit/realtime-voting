@@ -9,7 +9,7 @@ joining to PostgreSQL tables.
 Replaces the manual dictionary merging in voting.py:82-85 and the duplicate
 schema definition in spark-streaming.py:19-46.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from pydantic import BaseModel, Field
 
@@ -36,7 +36,7 @@ class Vote(BaseModel):
     # Core vote data - required fields
     voter_id: str = Field(..., description="Unique voter identifier (UUID)")
     candidate_id: str = Field(..., description="Unique candidate identifier (UUID)")
-    voting_time: str = Field(..., description="Timestamp when vote was cast (YYYY-MM-DD HH:MM:SS)")
+    voting_time: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Timestamp when vote was cast")
     vote: int = Field(default=1, ge=1, description="Vote count (always 1 per voter)")
 
     # Denormalized voter information - optional because database only stores IDs
@@ -84,15 +84,11 @@ class Vote(BaseModel):
         Converts vote to minimal tuple for PostgreSQL insertion.
 
         Follows Interface Segregation Principle by returning ONLY the fields
-        that the database needs. The votes table (main.py:54-61) only stores
-        the relationship between voter and candidate, not all the enriched data.
+        that the database needs. The votes table only stores the relationship
+        between voter and candidate, not all the enriched data.
 
-        The database schema is intentionally minimal because:
-        - Full voter/candidate data already exists in their respective tables
-        - Storing IDs only ensures referential integrity via foreign keys
-        - Enriched data flows through Kafka for real-time processing
-
-        Used by voting.py:90-92 for database insertion.
+        voting_time is formatted as a string here — the DB boundary — so the
+        rest of the application can work with proper datetime objects.
 
         Returns:
             Tuple of 3 elements: (voter_id, candidate_id, voting_time)
@@ -100,7 +96,7 @@ class Vote(BaseModel):
         return (
             self.voter_id,
             self.candidate_id,
-            self.voting_time
+            self.voting_time.strftime("%Y-%m-%d %H:%M:%S"),
         )
 
     @classmethod
@@ -108,7 +104,7 @@ class Vote(BaseModel):
         cls,
         voter: dict,
         candidate: dict,
-        voting_time: str = None
+        voting_time: datetime = None,
     ) -> 'Vote':
         """
         Factory method to create an enriched Vote from voter and candidate data.
@@ -118,35 +114,17 @@ class Vote(BaseModel):
         This follows DRY principle - when Vote model fields change, this method
         automatically adapts without code changes.
 
-        The enrichment (copying all voter and candidate fields) happens here to
-        prepare data for Kafka streaming. Spark will consume this enriched data
-        for real-time aggregation without needing database lookups.
-
-        Implementation:
-        1. Start with core vote data (voter_id, candidate_id, voting_time, vote)
-        2. Dynamically extract voter fields that exist in Vote model
-        3. Dynamically extract candidate fields that exist in Vote model
-        4. Pydantic validates the merged data and creates Vote instance
-
-        This replaces 20+ lines of hardcoded field mappings with a 3-line
-        dynamic solution that automatically stays in sync with the Vote schema.
-
         Args:
             voter: Dictionary with voter data (from Voter.model_dump())
             candidate: Dictionary with candidate data (from Candidate.model_dump())
-            voting_time: Optional timestamp string. If None, uses current UTC time.
+            voting_time: Optional datetime. If None, uses current UTC time.
 
         Returns:
             Vote instance with all fields populated (core + enriched data)
-
-        Example:
-            voter = Voter(**voter_data).model_dump()
-            candidate = Candidate(**candidate_data).model_dump()
-            vote = Vote.from_voter_and_candidate(voter, candidate)
         """
         # Default to current time if not provided
         if voting_time is None:
-            voting_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            voting_time = datetime.now(timezone.utc)
 
         # Start with core vote data
         vote_data = {
@@ -177,3 +155,43 @@ class Vote(BaseModel):
         # Pydantic validates all fields and creates the Vote instance
         # Any missing required fields or type mismatches will raise ValidationError
         return cls(**vote_data)
+
+    @staticmethod
+    def spark_schema():
+        """Return the canonical PySpark StructType schema for Vote messages.
+
+        Kept here (single source of truth) so spark-streaming.py never needs
+        to duplicate or manually maintain field definitions.
+        """
+        from pyspark.sql.types import (
+            IntegerType, StringType, StructField, StructType, TimestampType,
+        )
+
+        return StructType([
+            StructField("voter_id", StringType(), True),
+            StructField("candidate_id", StringType(), True),
+            StructField("voting_time", TimestampType(), True),
+            StructField("vote", IntegerType(), True),
+            StructField("voter_name", StringType(), True),
+            StructField("date_of_birth", StringType(), True),
+            StructField("gender", StringType(), True),
+            StructField("nationality", StringType(), True),
+            StructField("registration_number", StringType(), True),
+            StructField("email", StringType(), True),
+            StructField("phone_number", StringType(), True),
+            StructField("cell_number", StringType(), True),
+            StructField("picture", StringType(), True),
+            StructField("registered_age", IntegerType(), True),
+            StructField("address", StructType([
+                StructField("street", StringType(), True),
+                StructField("city", StringType(), True),
+                StructField("state", StringType(), True),
+                StructField("country", StringType(), True),
+                StructField("postcode", StringType(), True),
+            ]), True),
+            StructField("candidate_name", StringType(), True),
+            StructField("party_affiliation", StringType(), True),
+            StructField("biography", StringType(), True),
+            StructField("campaign_platform", StringType(), True),
+            StructField("photo_url", StringType(), True),
+        ])

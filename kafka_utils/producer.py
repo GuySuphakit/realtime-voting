@@ -169,12 +169,3 @@ class KafkaProducerWrapper:
         self.flush()
 
 
-_default_producer: Optional[KafkaProducerWrapper] = None
-
-
-def get_producer() -> KafkaProducerWrapper:
-    """Get or create the default producer instance."""
-    global _default_producer
-    if _default_producer is None:
-        _default_producer = KafkaProducerWrapper()
-    return _default_producer

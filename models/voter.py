@@ -54,7 +54,7 @@ class Voter(BaseModel):
     date_of_birth: str = Field(..., description="Date of birth in ISO format")
     gender: str = Field(..., description="Gender of the voter")
     nationality: str = Field(..., max_length=2, description="ISO country code (e.g., 'GB')")
-    registered_age: int = Field(..., ge=0, description="Age when voter registered")
+    registered_age: int = Field(..., ge=0, le=150, description="Age when voter registered")
 
     # Registration information
     registration_number: str = Field(..., description="Unique voter registration number")
