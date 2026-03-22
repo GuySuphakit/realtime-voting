@@ -42,7 +42,9 @@ class VotingService:
         self._vote_repo = vote_repo
         self._consumer = consumer
         self._producer = producer
-        self._delay = voting_delay if voting_delay is not None else settings.app.voting_delay_seconds
+        self._delay = (
+            voting_delay if voting_delay is not None else settings.app.voting_delay_seconds
+        )
 
     def run(self) -> None:
         """Start the voting loop. Runs until the consumer is stopped or interrupted."""

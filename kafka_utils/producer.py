@@ -108,7 +108,7 @@ class KafkaProducerWrapper:
                 f"Failed to produce message to '{topic}': {e}",
                 topic=topic,
                 original_error=e,
-            )
+            ) from e
 
     def produce_model(
         self,
@@ -167,5 +167,3 @@ class KafkaProducerWrapper:
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         """Context manager exit - flushes pending messages."""
         self.flush()
-
-

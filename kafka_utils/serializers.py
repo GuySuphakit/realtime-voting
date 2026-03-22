@@ -36,7 +36,7 @@ def serialize_to_json(data: Any) -> bytes:
             json_str = json.dumps(data)
         return json_str.encode("utf-8")
     except (TypeError, ValueError) as e:
-        raise SerializationError(f"Failed to serialize data: {e}", data=data)
+        raise SerializationError(f"Failed to serialize data: {e}", data=data) from e
 
 
 def deserialize_from_json(data: bytes) -> Dict[str, Any]:
@@ -54,7 +54,7 @@ def deserialize_from_json(data: bytes) -> Dict[str, Any]:
     try:
         return json.loads(data.decode("utf-8"))
     except (json.JSONDecodeError, UnicodeDecodeError) as e:
-        raise DeserializationError(f"Failed to deserialize data: {e}", raw_data=data)
+        raise DeserializationError(f"Failed to deserialize data: {e}", raw_data=data) from e
 
 
 def json_serializer(data: Any, context=None) -> bytes:

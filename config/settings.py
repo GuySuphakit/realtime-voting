@@ -17,6 +17,7 @@ Usage:
 """
 import os
 from typing import List
+
 from dotenv import load_dotenv
 
 # Load environment variables from .env file if it exists
@@ -34,11 +35,11 @@ class DatabaseConfig:
 
     def __init__(self):
         # Read database credentials from environment or use local defaults
-        self.host = os.getenv('POSTGRES_HOST', 'localhost')
-        self.port = int(os.getenv('POSTGRES_PORT', '5432'))
-        self.database = os.getenv('POSTGRES_DB', 'voting')
-        self.user = os.getenv('POSTGRES_USER', 'postgres')
-        self.password = os.getenv('POSTGRES_PASSWORD', 'postgres')
+        self.host = os.getenv("POSTGRES_HOST", "localhost")
+        self.port = int(os.getenv("POSTGRES_PORT", "5432"))
+        self.database = os.getenv("POSTGRES_DB", "voting")
+        self.user = os.getenv("POSTGRES_USER", "postgres")
+        self.password = os.getenv("POSTGRES_PASSWORD", "postgres")
 
     @property
     def connection_string(self) -> str:
@@ -71,24 +72,22 @@ class KafkaConfig:
 
     def __init__(self):
         # Kafka cluster connection settings
-        self.bootstrap_servers = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
-        self.group_id = os.getenv('KAFKA_GROUP_ID', 'voting-group')
-        self.auto_offset_reset = os.getenv('KAFKA_AUTO_OFFSET_RESET', 'earliest')
+        self.bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+        self.group_id = os.getenv("KAFKA_GROUP_ID", "voting-group")
+        self.auto_offset_reset = os.getenv("KAFKA_AUTO_OFFSET_RESET", "earliest")
 
         # Topic names - centralized to avoid magic strings throughout the codebase
         # Raw data topics (voter and candidate information)
-        self.voters_topic = os.getenv('KAFKA_VOTERS_TOPIC', 'voters_topic')
-        self.candidates_topic = os.getenv('KAFKA_CANDIDATES_TOPIC', 'candidates_topic')
-        self.votes_topic = os.getenv('KAFKA_VOTES_TOPIC', 'votes_topic')
+        self.voters_topic = os.getenv("KAFKA_VOTERS_TOPIC", "voters_topic")
+        self.candidates_topic = os.getenv("KAFKA_CANDIDATES_TOPIC", "candidates_topic")
+        self.votes_topic = os.getenv("KAFKA_VOTES_TOPIC", "votes_topic")
 
         # Aggregated data topics (processed by Spark)
         self.aggregated_votes_per_candidate_topic = os.getenv(
-            'KAFKA_AGGREGATED_VOTES_TOPIC',
-            'aggregated_votes_per_candidate'
+            "KAFKA_AGGREGATED_VOTES_TOPIC", "aggregated_votes_per_candidate"
         )
         self.aggregated_turnout_by_location_topic = os.getenv(
-            'KAFKA_AGGREGATED_TURNOUT_TOPIC',
-            'aggregated_turnout_by_location'
+            "KAFKA_AGGREGATED_TURNOUT_TOPIC", "aggregated_turnout_by_location"
         )
 
     def get_producer_config(self) -> dict:
@@ -99,7 +98,7 @@ class KafkaConfig:
         Ensures consistent producer settings across the application.
         """
         return {
-            'bootstrap.servers': self.bootstrap_servers,
+            "bootstrap.servers": self.bootstrap_servers,
         }
 
     def get_consumer_config(self, group_id: str = None) -> dict:
@@ -113,10 +112,10 @@ class KafkaConfig:
         Disables auto-commit to allow manual offset management for reliability.
         """
         return {
-            'bootstrap.servers': self.bootstrap_servers,
-            'group.id': group_id or self.group_id,
-            'auto.offset.reset': self.auto_offset_reset,
-            'enable.auto.commit': False
+            "bootstrap.servers": self.bootstrap_servers,
+            "group.id": group_id or self.group_id,
+            "auto.offset.reset": self.auto_offset_reset,
+            "enable.auto.commit": False,
         }
 
 
@@ -131,23 +130,20 @@ class SparkConfig:
 
     def __init__(self):
         # Spark execution mode (local[*] uses all available CPU cores)
-        self.master = os.getenv('SPARK_MASTER', 'local[*]')
-        self.app_name = os.getenv('SPARK_APP_NAME', 'ElectionAnalysis')
+        self.master = os.getenv("SPARK_MASTER", "local[*]")
+        self.app_name = os.getenv("SPARK_APP_NAME", "ElectionAnalysis")
 
         # Checkpoint directory for streaming fault tolerance
         # Stores state information to resume processing after failures
-        self.checkpoint_dir = os.getenv('SPARK_CHECKPOINT_DIR', 'checkpoints')
+        self.checkpoint_dir = os.getenv("SPARK_CHECKPOINT_DIR", "checkpoints")
 
         # PostgreSQL JDBC driver path for database connectivity
         # Previously hardcoded as absolute path in spark-streaming.py
-        self.postgresql_jar_path = os.getenv(
-            'POSTGRESQL_JAR_PATH',
-            'postgresql-42.7.2.jar'
-        )
+        self.postgresql_jar_path = os.getenv("POSTGRESQL_JAR_PATH", "postgresql-42.7.2.jar")
 
         # Watermark duration for handling late-arriving events
         # Determines how long to wait for delayed vote data
-        self.watermark_duration = os.getenv('SPARK_WATERMARK_DURATION', '1 minute')
+        self.watermark_duration = os.getenv("SPARK_WATERMARK_DURATION", "1 minute")
 
 
 class ApplicationConfig:
@@ -160,28 +156,27 @@ class ApplicationConfig:
 
     def __init__(self):
         # Random seed for reproducible test data generation
-        self.random_seed = int(os.getenv('RANDOM_SEED', '42'))
+        self.random_seed = int(os.getenv("RANDOM_SEED", "42"))
 
         # Number of candidates and voters to generate
         # Used by main.py during initialization
-        self.num_candidates = int(os.getenv('NUM_CANDIDATES', '3'))
-        self.num_voters = int(os.getenv('NUM_VOTERS', '500'))
+        self.num_candidates = int(os.getenv("NUM_CANDIDATES", "3"))
+        self.num_voters = int(os.getenv("NUM_VOTERS", "500"))
 
         # Delay between vote submissions in seconds
         # Controls voting simulation speed in voting.py
-        self.voting_delay_seconds = float(os.getenv('VOTING_DELAY_SECONDS', '0.2'))
+        self.voting_delay_seconds = float(os.getenv("VOTING_DELAY_SECONDS", "0.2"))
 
         # External API endpoint for generating realistic voter/candidate data
         # Uses randomuser.me to create demographic information
         self.randomuser_api_url = os.getenv(
-            'RANDOMUSER_API_URL',
-            'https://randomuser.me/api/?nat=gb'
+            "RANDOMUSER_API_URL", "https://randomuser.me/api/?nat=gb"
         )
 
         # List of political parties for candidate assignment
         # Loaded from comma-separated string in environment
         self.parties = self._parse_parties(
-            os.getenv('PARTIES', 'Management Party,Savior Party,Tech Republic Party')
+            os.getenv("PARTIES", "Management Party,Savior Party,Tech Republic Party")
         )
 
     @staticmethod
@@ -195,7 +190,7 @@ class ApplicationConfig:
         Returns:
             List of party names with whitespace trimmed
         """
-        return [party.strip() for party in parties_str.split(',')]
+        return [party.strip() for party in parties_str.split(",")]
 
 
 class Settings:

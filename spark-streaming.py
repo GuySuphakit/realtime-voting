@@ -11,8 +11,7 @@ VOTE_SCHEMA = Vote.spark_schema()
 
 def build_spark_session() -> SparkSession:
     return (
-        SparkSession.builder
-        .appName(settings.spark.app_name)
+        SparkSession.builder.appName(settings.spark.app_name)
         .master(settings.spark.master)
         .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0")
         .config("spark.jars", settings.spark.postgresql_jar_path)
@@ -24,8 +23,7 @@ def build_spark_session() -> SparkSession:
 def write_stream_to_kafka(df, topic: str, checkpoint: str):
     return (
         df.selectExpr("to_json(struct(*)) AS value")
-        .writeStream
-        .format("kafka")
+        .writeStream.format("kafka")
         .option("kafka.bootstrap.servers", settings.kafka.bootstrap_servers)
         .option("topic", topic)
         .option("checkpointLocation", f"{settings.spark.checkpoint_dir}/{checkpoint}")
@@ -38,8 +36,7 @@ if __name__ == "__main__":
     spark = build_spark_session()
 
     votes_df = (
-        spark.readStream
-        .format("kafka")
+        spark.readStream.format("kafka")
         .option("kafka.bootstrap.servers", settings.kafka.bootstrap_servers)
         .option("subscribe", settings.kafka.votes_topic)
         .option("startingOffsets", "earliest")

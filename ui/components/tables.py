@@ -1,12 +1,12 @@
 """Table components with pagination for the election dashboard."""
 
-import streamlit as st
 import pandas as pd
+import streamlit as st
 
 
 @st.cache_data(show_spinner=False)
 def _split_frame(df: pd.DataFrame, rows: int) -> list[pd.DataFrame]:
-    return [df.loc[i: i + rows - 1, :] for i in range(0, len(df), rows)]
+    return [df.loc[i : i + rows - 1, :] for i in range(0, len(df), rows)]
 
 
 def paginate_table(table_data: pd.DataFrame) -> None:

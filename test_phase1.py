@@ -4,6 +4,7 @@ Test script to demonstrate Phase 1 improvements.
 Shows how the new config and models work together.
 """
 
+
 def test_configuration():
     """Test centralized configuration."""
     print("=" * 60)
@@ -19,7 +20,7 @@ def test_configuration():
     print("\n✅ Kafka Configuration:")
     print(f"   Bootstrap Servers: {settings.kafka.bootstrap_servers}")
     print(f"   Group ID: {settings.kafka.group_id}")
-    print(f"   Topics:")
+    print("   Topics:")
     print(f"     - Voters: {settings.kafka.voters_topic}")
     print(f"     - Votes: {settings.kafka.votes_topic}")
     print(f"     - Aggregated: {settings.kafka.aggregated_votes_per_candidate_topic}")
@@ -43,7 +44,7 @@ def test_models():
     print("Testing Data Models (DRY + Type Safety)")
     print("=" * 60)
 
-    from models import Voter, Candidate, Vote, Address
+    from models import Address, Candidate, Vote, Voter
 
     # Test Address
     print("\n✅ Creating Address model...")
@@ -52,7 +53,7 @@ def test_models():
         city="London",
         state="England",
         country="United Kingdom",
-        postcode="SW1A 2AA"
+        postcode="SW1A 2AA",
     )
     print(f"   Address: {address.street}, {address.city}")
 
@@ -70,7 +71,7 @@ def test_models():
         phone_number="+44 20 7925 0918",
         cell_number="+44 7700 900001",
         picture="https://example.com/winston.jpg",
-        registered_age=21
+        registered_age=21,
     )
     print(f"   Voter: {voter.voter_name} ({voter.voter_id})")
     print(f"   Email: {voter.email}")
@@ -84,7 +85,7 @@ def test_models():
         party_affiliation="Management Party",
         biography="Former Prime Minister with strong leadership.",
         campaign_platform="Economic reform and strong governance.",
-        photo_url="https://example.com/margaret.jpg"
+        photo_url="https://example.com/margaret.jpg",
     )
     print(f"   Candidate: {candidate.candidate_name}")
     print(f"   Party: {candidate.party_affiliation}")
@@ -92,9 +93,7 @@ def test_models():
     # Test Vote with factory method
     print("\n✅ Creating Vote using factory method...")
     vote = Vote.from_voter_and_candidate(
-        voter.model_dump(),
-        candidate.model_dump(),
-        "2024-02-28 10:30:00"
+        voter.model_dump(), candidate.model_dump(), "2024-02-28 10:30:00"
     )
     print(f"   Vote: {vote.voter_name} → {vote.candidate_name}")
     print(f"   Party: {vote.party_affiliation}")
@@ -125,18 +124,15 @@ def test_validation():
     print("Testing Validation (Type Safety)")
     print("=" * 60)
 
-    from models import Voter, Address
     from pydantic import ValidationError
+
+    from models import Address, Voter
 
     # Test invalid email
     print("\n✅ Testing email validation...")
     try:
         address = Address(
-            street="123 Main St",
-            city="London",
-            state="England",
-            country="UK",
-            postcode="SW1A"
+            street="123 Main St", city="London", state="England", country="UK", postcode="SW1A"
         )
         voter = Voter(
             voter_id="test",
@@ -150,7 +146,7 @@ def test_validation():
             phone_number="123",
             cell_number="456",
             picture="https://example.com/pic.jpg",
-            registered_age=18
+            registered_age=18,
         )
         print("   ❌ Validation should have failed!")
     except ValidationError as e:
@@ -172,7 +168,7 @@ def test_validation():
             phone_number="123",
             cell_number="456",
             picture="https://example.com/pic.jpg",
-            registered_age=18
+            registered_age=18,
         )
         print(f"   ✅ Voter created successfully: {voter.email}")
     except ValidationError as e:
