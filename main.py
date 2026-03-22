@@ -22,7 +22,9 @@ def seed_candidates(repo: CandidateRepository, generator: DataGeneratorService) 
     for i in range(settings.app.num_candidates):
         candidate = generator.generate_candidate(i)
         repo.insert(candidate)
-        logger.info("Seeded candidate: %s (%s)", candidate.candidate_name, candidate.party_affiliation)
+        logger.info(
+            "Seeded candidate: %s (%s)", candidate.candidate_name, candidate.party_affiliation
+        )
 
 
 def seed_voters(
