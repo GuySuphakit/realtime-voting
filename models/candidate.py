@@ -9,8 +9,7 @@ dashboard display (streamlit-app.py).
 Eliminates the need for manually constructing candidate dictionaries and
 ensures consistent data structure throughout the application.
 """
-from typing import Optional
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
 
 
 class Candidate(BaseModel):
@@ -34,8 +33,7 @@ class Candidate(BaseModel):
 
     # Political information
     party_affiliation: str = Field(
-        ...,
-        description="Political party (from config.app.parties list)"
+        ..., description="Political party (from config.app.parties list)"
     )
 
     # Campaign information
@@ -47,6 +45,7 @@ class Candidate(BaseModel):
 
     class Config:
         """Pydantic model configuration."""
+
         # Allow modification after creation
         frozen = False
         json_schema_extra = {
@@ -56,7 +55,7 @@ class Candidate(BaseModel):
                 "party_affiliation": "Management Party",
                 "biography": "A brief bio of the candidate.",
                 "campaign_platform": "Key campaign promises or platform.",
-                "photo_url": "https://randomuser.me/api/portraits/women/1.jpg"
+                "photo_url": "https://randomuser.me/api/portraits/women/1.jpg",
             }
         }
 
@@ -80,5 +79,5 @@ class Candidate(BaseModel):
             self.party_affiliation,
             self.biography,
             self.campaign_platform,
-            self.photo_url
+            self.photo_url,
         )

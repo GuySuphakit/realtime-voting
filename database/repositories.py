@@ -54,7 +54,7 @@ class BaseRepository(ABC, Generic[T]):
                     cur.execute(self.create_table_sql)
             logger.info(f"Table '{self.table_name}' created/verified")
         except psycopg2.Error as e:
-            raise SchemaError(f"Failed to create table '{self.table_name}': {e}")
+            raise SchemaError(f"Failed to create table '{self.table_name}': {e}") from e
 
     @abstractmethod
     def insert(self, entity: T) -> None:
@@ -98,17 +98,17 @@ class CandidateRepository(BaseRepository[Candidate]):
                 with conn.cursor() as cur:
                     cur.execute(self._insert_sql, candidate.to_db_tuple())
             logger.debug(f"Inserted candidate: {candidate.candidate_id}")
-        except psycopg2.IntegrityError:
+        except psycopg2.IntegrityError as e:
             raise IntegrityError(
                 f"Candidate '{candidate.candidate_id}' already exists",
                 constraint="candidates_pkey",
-            )
+            ) from e
         except psycopg2.Error as e:
             raise QueryError(
                 f"Failed to insert candidate: {e}",
                 query=self._insert_sql,
                 original_error=e,
-            )
+            ) from e
 
     def get_all(self) -> List[Candidate]:
         """Retrieve all candidates from the database."""
@@ -137,7 +137,7 @@ class CandidateRepository(BaseRepository[Candidate]):
                 f"Failed to fetch candidates: {e}",
                 query="SELECT * FROM candidates",
                 original_error=e,
-            )
+            ) from e
 
     def get_as_json(self) -> List[Dict[str, Any]]:
         """Retrieve all candidates as JSON-serializable dictionaries.
@@ -161,7 +161,7 @@ class CandidateRepository(BaseRepository[Candidate]):
             raise QueryError(
                 f"Failed to fetch candidates as JSON: {e}",
                 original_error=e,
-            )
+            ) from e
 
     def count(self) -> int:
         """Count total candidates."""
@@ -171,7 +171,7 @@ class CandidateRepository(BaseRepository[Candidate]):
                     cur.execute("SELECT COUNT(*) FROM candidates")
                     return cur.fetchone()[0]
         except psycopg2.Error as e:
-            raise QueryError(f"Failed to count candidates: {e}", original_error=e)
+            raise QueryError(f"Failed to count candidates: {e}", original_error=e) from e
 
 
 class VoterRepository(BaseRepository[Voter]):
@@ -222,17 +222,17 @@ class VoterRepository(BaseRepository[Voter]):
                 with conn.cursor() as cur:
                     cur.execute(self._insert_sql, voter.to_db_tuple())
             logger.debug(f"Inserted voter: {voter.voter_id}")
-        except psycopg2.IntegrityError:
+        except psycopg2.IntegrityError as e:
             raise IntegrityError(
                 f"Voter '{voter.voter_id}' already exists",
                 constraint="voters_pkey",
-            )
+            ) from e
         except psycopg2.Error as e:
             raise QueryError(
                 f"Failed to insert voter: {e}",
                 query=self._insert_sql,
                 original_error=e,
-            )
+            ) from e
 
     def count(self) -> int:
         """Count total voters."""
@@ -242,7 +242,7 @@ class VoterRepository(BaseRepository[Voter]):
                     cur.execute("SELECT COUNT(*) FROM voters")
                     return cur.fetchone()[0]
         except psycopg2.Error as e:
-            raise QueryError(f"Failed to count voters: {e}", original_error=e)
+            raise QueryError(f"Failed to count voters: {e}", original_error=e) from e
 
 
 class VoteRepository(BaseRepository[Vote]):
@@ -278,17 +278,17 @@ class VoteRepository(BaseRepository[Vote]):
                 with conn.cursor() as cur:
                     cur.execute(self._insert_sql, vote.to_db_tuple())
             logger.debug(f"Inserted vote: voter={vote.voter_id}")
-        except psycopg2.IntegrityError:
+        except psycopg2.IntegrityError as e:
             raise IntegrityError(
                 f"Voter '{vote.voter_id}' has already voted",
                 constraint="votes_voter_id_key",
-            )
+            ) from e
         except psycopg2.Error as e:
             raise QueryError(
                 f"Failed to insert vote: {e}",
                 query=self._insert_sql,
                 original_error=e,
-            )
+            ) from e
 
 
 def create_all_tables() -> None:

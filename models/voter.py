@@ -8,9 +8,7 @@ and duplicate field definitions across multiple files.
 Previously, voter data was handled as raw dictionaries with no validation,
 leading to potential runtime errors from typos, missing fields, or invalid data.
 """
-from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class Address(BaseModel):
@@ -20,14 +18,16 @@ class Address(BaseModel):
     Nested within the Voter model to maintain the same structure used by
     the external randomuser.me API and expected by Spark streaming jobs.
     """
+
     street: str  # Full street address including number
-    city: str    # City name
-    state: str   # State/province/region
-    country: str # Country name
-    postcode: str # Postal/ZIP code
+    city: str  # City name
+    state: str  # State/province/region
+    country: str  # Country name
+    postcode: str  # Postal/ZIP code
 
     class Config:
         """Pydantic model configuration."""
+
         # Allow modification after creation (needed for data transformations)
         frozen = False
 
@@ -70,6 +70,7 @@ class Voter(BaseModel):
 
     class Config:
         """Pydantic model configuration."""
+
         # Allow modification after creation
         frozen = False
         json_schema_extra = {
@@ -85,13 +86,13 @@ class Voter(BaseModel):
                     "city": "London",
                     "state": "England",
                     "country": "United Kingdom",
-                    "postcode": "SW1A 1AA"
+                    "postcode": "SW1A 1AA",
                 },
                 "email": "john.doe@example.com",
                 "phone_number": "+44 20 1234 5678",
                 "cell_number": "+44 7700 900000",
                 "picture": "https://randomuser.me/api/portraits/men/1.jpg",
-                "registered_age": 18
+                "registered_age": 18,
             }
         }
 
@@ -128,5 +129,5 @@ class Voter(BaseModel):
             self.cell_number,
             # Additional fields
             self.picture,
-            self.registered_age
+            self.registered_age,
         )

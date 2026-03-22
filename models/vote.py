@@ -11,6 +11,7 @@ schema definition in spark-streaming.py:19-46.
 """
 from datetime import datetime, timezone
 from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -36,7 +37,10 @@ class Vote(BaseModel):
     # Core vote data - required fields
     voter_id: str = Field(..., description="Unique voter identifier (UUID)")
     candidate_id: str = Field(..., description="Unique candidate identifier (UUID)")
-    voting_time: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Timestamp when vote was cast")
+    voting_time: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Timestamp when vote was cast",
+    )
     vote: int = Field(default=1, ge=1, description="Vote count (always 1 per voter)")
 
     # Denormalized voter information - optional because database only stores IDs
@@ -64,6 +68,7 @@ class Vote(BaseModel):
 
     class Config:
         """Pydantic model configuration."""
+
         # Allow modification after creation
         frozen = False
         json_schema_extra = {
@@ -75,7 +80,7 @@ class Vote(BaseModel):
                 "voter_name": "John Doe",
                 "candidate_name": "Jane Smith",
                 "party_affiliation": "Management Party",
-                "photo_url": "https://randomuser.me/api/portraits/women/1.jpg"
+                "photo_url": "https://randomuser.me/api/portraits/women/1.jpg",
             }
         }
 
@@ -105,7 +110,7 @@ class Vote(BaseModel):
         voter: dict,
         candidate: dict,
         voting_time: datetime = None,
-    ) -> 'Vote':
+    ) -> "Vote":
         """
         Factory method to create an enriched Vote from voter and candidate data.
 
@@ -128,29 +133,33 @@ class Vote(BaseModel):
 
         # Start with core vote data
         vote_data = {
-            'voter_id': voter.get('voter_id'),
-            'candidate_id': candidate.get('candidate_id'),
-            'voting_time': voting_time,
-            'vote': 1
+            "voter_id": voter.get("voter_id"),
+            "candidate_id": candidate.get("candidate_id"),
+            "voting_time": voting_time,
+            "vote": 1,
         }
 
         # Dynamically extract all voter fields that exist in Vote model
         # Uses Pydantic's model_fields to introspect the Vote schema
         # Only includes fields that are defined in the Vote model (safe merge)
-        vote_data.update({
-            field_name: voter.get(field_name)
-            for field_name in voter.keys()
-            if field_name in cls.model_fields and field_name not in vote_data
-        })
+        vote_data.update(
+            {
+                field_name: voter.get(field_name)
+                for field_name in voter.keys()
+                if field_name in cls.model_fields and field_name not in vote_data
+            }
+        )
 
         # Dynamically extract all candidate fields that exist in Vote model
         # Candidate fields won't overlap with voter fields due to distinct naming
         # (voter_name vs candidate_name, picture vs photo_url, etc.)
-        vote_data.update({
-            field_name: candidate.get(field_name)
-            for field_name in candidate.keys()
-            if field_name in cls.model_fields and field_name not in vote_data
-        })
+        vote_data.update(
+            {
+                field_name: candidate.get(field_name)
+                for field_name in candidate.keys()
+                if field_name in cls.model_fields and field_name not in vote_data
+            }
+        )
 
         # Pydantic validates all fields and creates the Vote instance
         # Any missing required fields or type mismatches will raise ValidationError
@@ -164,34 +173,46 @@ class Vote(BaseModel):
         to duplicate or manually maintain field definitions.
         """
         from pyspark.sql.types import (
-            IntegerType, StringType, StructField, StructType, TimestampType,
+            IntegerType,
+            StringType,
+            StructField,
+            StructType,
+            TimestampType,
         )
 
-        return StructType([
-            StructField("voter_id", StringType(), True),
-            StructField("candidate_id", StringType(), True),
-            StructField("voting_time", TimestampType(), True),
-            StructField("vote", IntegerType(), True),
-            StructField("voter_name", StringType(), True),
-            StructField("date_of_birth", StringType(), True),
-            StructField("gender", StringType(), True),
-            StructField("nationality", StringType(), True),
-            StructField("registration_number", StringType(), True),
-            StructField("email", StringType(), True),
-            StructField("phone_number", StringType(), True),
-            StructField("cell_number", StringType(), True),
-            StructField("picture", StringType(), True),
-            StructField("registered_age", IntegerType(), True),
-            StructField("address", StructType([
-                StructField("street", StringType(), True),
-                StructField("city", StringType(), True),
-                StructField("state", StringType(), True),
-                StructField("country", StringType(), True),
-                StructField("postcode", StringType(), True),
-            ]), True),
-            StructField("candidate_name", StringType(), True),
-            StructField("party_affiliation", StringType(), True),
-            StructField("biography", StringType(), True),
-            StructField("campaign_platform", StringType(), True),
-            StructField("photo_url", StringType(), True),
-        ])
+        return StructType(
+            [
+                StructField("voter_id", StringType(), True),
+                StructField("candidate_id", StringType(), True),
+                StructField("voting_time", TimestampType(), True),
+                StructField("vote", IntegerType(), True),
+                StructField("voter_name", StringType(), True),
+                StructField("date_of_birth", StringType(), True),
+                StructField("gender", StringType(), True),
+                StructField("nationality", StringType(), True),
+                StructField("registration_number", StringType(), True),
+                StructField("email", StringType(), True),
+                StructField("phone_number", StringType(), True),
+                StructField("cell_number", StringType(), True),
+                StructField("picture", StringType(), True),
+                StructField("registered_age", IntegerType(), True),
+                StructField(
+                    "address",
+                    StructType(
+                        [
+                            StructField("street", StringType(), True),
+                            StructField("city", StringType(), True),
+                            StructField("state", StringType(), True),
+                            StructField("country", StringType(), True),
+                            StructField("postcode", StringType(), True),
+                        ]
+                    ),
+                    True,
+                ),
+                StructField("candidate_name", StringType(), True),
+                StructField("party_affiliation", StringType(), True),
+                StructField("biography", StringType(), True),
+                StructField("campaign_platform", StringType(), True),
+                StructField("photo_url", StringType(), True),
+            ]
+        )

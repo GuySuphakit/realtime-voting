@@ -104,7 +104,7 @@ class KafkaConsumerWrapper:
             raise ConsumerError(
                 f"Kafka error during poll: {e}",
                 original_error=e,
-            )
+            ) from e
 
     def poll_raw(self, timeout: float = 1.0) -> Optional[Any]:
         """Poll for a raw message (confluent_kafka Message object).
@@ -123,7 +123,7 @@ class KafkaConsumerWrapper:
                 return None
             return msg
         except KafkaException as e:
-            raise ConsumerError(f"Kafka error: {e}", original_error=e)
+            raise ConsumerError(f"Kafka error: {e}", original_error=e) from e
 
     def consume(
         self,

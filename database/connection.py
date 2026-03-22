@@ -16,6 +16,8 @@ import psycopg2
 from config import settings
 from database.exceptions import (
     ConnectionError as DBConnectionError,
+)
+from database.exceptions import (
     ConnectionPoolExhaustedError,
 )
 
@@ -112,7 +114,7 @@ class ConnectionPool:
             raise DBConnectionError(
                 f"Failed to connect to database: {e}",
                 original_error=e,
-            )
+            ) from e
 
     def _validate_connection(self, conn: PgConnection) -> bool:
         """Check if a connection is still valid."""
@@ -158,7 +160,7 @@ class ConnectionPool:
                         self._connection_count -= 1
                     conn = self._create_connection()
 
-            except Empty:
+            except Empty as e:
                 # Pool empty, try to create new connection if under max
                 with self._pool_lock:
                     if self._connection_count < self._max_connections:
@@ -166,7 +168,7 @@ class ConnectionPool:
                     else:
                         raise ConnectionPoolExhaustedError(
                             f"Connection pool exhausted (max={self._max_connections})"
-                        )
+                        ) from e
 
             yield conn
             conn.commit()
