@@ -1,7 +1,32 @@
+# Virtual environments
 venv
+.venv
+
+# Poetry
+poetry.lock  # Optional: commit this in production, ignore for library development
+
+# Application data
 checkpoints
+
+# IDEs
 .idea
-.DS_Store
-__pycache__
 .vscode
 .defaultSettings.json
+
+# OS
+.DS_Store
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Environment variables
+.env
