@@ -297,3 +297,15 @@ def create_all_tables() -> None:
     VoterRepository().create_table()
     VoteRepository().create_table()
     logger.info("All tables created/verified")
+
+
+def reset_all_tables() -> None:
+    """Truncate all tables to allow a fresh simulation run."""
+    pool = ConnectionPool.get_instance()
+    try:
+        with pool.get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("TRUNCATE votes, voters, candidates RESTART IDENTITY CASCADE")
+        logger.info("All tables truncated — ready for fresh run")
+    except psycopg2.Error as e:
+        raise SchemaError(f"Failed to reset tables: {e}") from e
