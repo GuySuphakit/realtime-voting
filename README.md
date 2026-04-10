@@ -39,7 +39,7 @@ realtime-voting/
 ├── streamlit-app.py            # Dashboard: real-time vote visualization
 ├── .env.example                # Example environment variable configuration
 ├── docker-compose.yml          # Zookeeper, Kafka, PostgreSQL containers
-├── pyproject.toml              # Poetry dependency management
+├── pyproject.toml              # uv dependency management
 └── postgresql-42.7.2.jar       # JDBC driver for Spark ↔ PostgreSQL
 ```
 
@@ -54,7 +54,7 @@ realtime-voting/
 
 - Python 3.11+
 - Docker and Docker Compose
-- [Poetry](https://python-poetry.org/) (recommended) or `pip`
+- [uv](https://docs.astral.sh/uv/) (recommended) or `pip`
 
 ## Setting Up
 
@@ -87,10 +87,9 @@ Key variables:
 
 ### 3. Install dependencies
 
-Using Poetry (recommended):
+Using uv (recommended):
 ```bash
-poetry install
-poetry shell
+uv sync
 ```
 
 Or with pip:
