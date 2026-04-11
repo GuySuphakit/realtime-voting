@@ -147,12 +147,10 @@ class CandidateRepository(BaseRepository[Candidate]):
         try:
             with self._pool.get_connection() as conn:
                 with conn.cursor() as cur:
-                    cur.execute(
-                        """
+                    cur.execute("""
                         SELECT row_to_json(t)
                         FROM (SELECT * FROM candidates) t
-                    """
-                    )
+                    """)
                     rows = cur.fetchall()
 
             return [row[0] for row in rows]
