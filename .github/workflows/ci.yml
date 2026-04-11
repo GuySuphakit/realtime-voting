@@ -32,8 +32,8 @@ jobs:
       - name: Lint (ruff)
         run: uv run ruff check .
 
-      - name: Format check (black)
-        run: uv run black --check .
+      - name: Format check (ruff)
+        run: uv run ruff format --check .
 
       - name: Run tests (pytest)
         run: uv run pytest --tb=short -q
