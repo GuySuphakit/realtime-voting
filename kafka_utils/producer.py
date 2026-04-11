@@ -127,7 +127,7 @@ class KafkaProducerWrapper:
             key_field: Field name to use as key (default: first field ending in '_id')
             on_delivery: Optional delivery callback
         """
-        data = model.model_dump()
+        data = model.model_dump(mode="json")
 
         if key_field is None:
             for field in data.keys():

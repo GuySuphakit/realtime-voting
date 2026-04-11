@@ -1,9 +1,15 @@
+import argparse
 import logging
 import random
 
 from config import settings
 from database.exceptions import IntegrityError
-from database.repositories import CandidateRepository, VoterRepository, create_all_tables
+from database.repositories import (
+    CandidateRepository,
+    VoterRepository,
+    create_all_tables,
+    reset_all_tables,
+)
 from kafka_utils.producer import KafkaProducerWrapper
 from services.data_generator import DataGeneratorService
 
@@ -50,7 +56,15 @@ def seed_voters(
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Initialise the voting system.")
+    parser.add_argument("--reset", action="store_true", help="Truncate all tables before seeding.")
+    args = parser.parse_args()
+
     create_all_tables()
+
+    if args.reset:
+        logger.info("Reset mode: truncating all tables...")
+        reset_all_tables()
 
     generator = DataGeneratorService()
     candidate_repo = CandidateRepository()

@@ -31,7 +31,7 @@ def serialize_to_json(data: Any) -> bytes:
     """
     try:
         if isinstance(data, BaseModel):
-            json_str = json.dumps(data.model_dump())
+            json_str = json.dumps(data.model_dump(mode="json"))
         else:
             json_str = json.dumps(data)
         return json_str.encode("utf-8")

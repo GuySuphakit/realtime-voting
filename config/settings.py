@@ -15,6 +15,7 @@ Usage:
     producer = SerializingProducer(settings.kafka.get_producer_config())
     topic = settings.kafka.voters_topic
 """
+
 import os
 from typing import List
 

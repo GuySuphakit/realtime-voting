@@ -6,9 +6,10 @@ data generation is now separate from database and Kafka concerns.
 """
 
 import logging
+import time
 
 import requests
-from requests.exceptions import RequestException
+from requests.exceptions import RequestException  # used in _get
 
 from config import settings
 from models import Candidate, Voter
@@ -26,9 +27,34 @@ class DataGeneratorService:
         candidate = generator.generate_candidate(candidate_number=0)
     """
 
+    _MAX_RETRIES = 3
+    _RETRY_DELAY = 2  # seconds
+
     def __init__(self, api_url: str = None):
         self._api_url = api_url or settings.app.randomuser_api_url
         self._parties = settings.app.parties
+
+    def _get(self, url: str) -> dict:
+        """GET the URL with retries on timeout or connection errors."""
+        for attempt in range(1, self._MAX_RETRIES + 1):
+            try:
+                response = requests.get(url, timeout=10)
+                if response.status_code != 200:
+                    raise RuntimeError(f"HTTP {response.status_code}")
+                return response.json()
+            except RequestException as e:
+                if attempt == self._MAX_RETRIES:
+                    raise RuntimeError(
+                        f"Failed to reach randomuser API after {self._MAX_RETRIES} attempts: {e}"
+                    ) from e
+                logger.warning(
+                    "randomuser API error (attempt %d/%d): %s — retrying in %ds",
+                    attempt,
+                    self._MAX_RETRIES,
+                    e,
+                    self._RETRY_DELAY,
+                )
+                time.sleep(self._RETRY_DELAY)
 
     def generate_voter(self) -> Voter:
         """Fetch one random user from the API and return a Voter model.
@@ -39,14 +65,7 @@ class DataGeneratorService:
         Raises:
             RuntimeError: If the API call fails
         """
-        try:
-            response = requests.get(self._api_url, timeout=10)
-        except RequestException as e:
-            raise RuntimeError(f"Failed to reach randomuser API: {e}") from e
-        if response.status_code != 200:
-            raise RuntimeError(f"Failed to fetch voter data: HTTP {response.status_code}")
-
-        user = response.json()["results"][0]
+        user = self._get(self._api_url)["results"][0]
         return Voter(
             voter_id=user["login"]["uuid"],
             voter_name=f"{user['name']['first']} {user['name']['last']}",
@@ -83,14 +102,7 @@ class DataGeneratorService:
             RuntimeError: If the API call fails
         """
         gender = "female" if candidate_number % 2 == 1 else "male"
-        try:
-            response = requests.get(f"{self._api_url}&gender={gender}", timeout=10)
-        except RequestException as e:
-            raise RuntimeError(f"Failed to reach randomuser API: {e}") from e
-        if response.status_code != 200:
-            raise RuntimeError(f"Failed to fetch candidate data: HTTP {response.status_code}")
-
-        user = response.json()["results"][0]
+        user = self._get(f"{self._api_url}&gender={gender}")["results"][0]
         return Candidate(
             candidate_id=user["login"]["uuid"],
             candidate_name=f"{user['name']['first']} {user['name']['last']}",
