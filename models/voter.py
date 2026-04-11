@@ -8,6 +8,7 @@ and duplicate field definitions across multiple files.
 Previously, voter data was handled as raw dictionaries with no validation,
 leading to potential runtime errors from typos, missing fields, or invalid data.
 """
+
 from pydantic import BaseModel, EmailStr, Field
 
 

@@ -9,6 +9,7 @@ joining to PostgreSQL tables.
 Replaces the manual dictionary merging in voting.py:82-85 and the duplicate
 schema definition in spark-streaming.py:19-46.
 """
+
 from datetime import datetime, timezone
 from typing import Optional
 

@@ -9,6 +9,7 @@ dashboard display (streamlit-app.py).
 Eliminates the need for manually constructing candidate dictionaries and
 ensures consistent data structure throughout the application.
 """
+
 from pydantic import BaseModel, Field
 
 
